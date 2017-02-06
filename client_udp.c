@@ -1,3 +1,6 @@
+//Shyam Gopal
+//011534190
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>

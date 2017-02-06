@@ -12,18 +12,12 @@
 #define MAX_LINE 256
 #define SEQ_NO_LEN 5
 
-char parsePacket(char buf[], char payload[]) {
-	char seq_no = buf[0];
-	int framelen, i;
-	framelen = strlen(buf);
-
-	for (i = 1; i < framelen; i++) {
-		payload[i-1] = buf[i];
+char* parsePacket(char buf[]) {
+	char *p = buf;
+	while(*p >= '0' && *p <= '9') {
+		p++;
 	}
-	payload[framelen + 1] = '\0';
-
-
-	return seq_no;
+	return p;
 }
 
 
@@ -37,7 +31,7 @@ int main(int argc, char * argv[])
         int len, alen;
         int s, i;
         struct timeval tv;
-	char seq_num = 1, highest_seq_num = 0; 
+	int seq_num = 1, highest_seq_num = 0; 
 	FILE *fp;
 
         if (argc==2) {
@@ -76,7 +70,6 @@ int main(int argc, char * argv[])
 	
 	while(1){
 		len = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&sin, &sock_len);
-		printf("Received packet length %d\n", len);
 		if(len == -1){
         	    perror("PError");
 		}	
@@ -90,25 +83,24 @@ int main(int argc, char * argv[])
 			}
 		}	
 		else if(len > 1){
-			seq_num = parsePacket(buf, payload);
-			printf("Received sequence number %d\n", (int)seq_num);
+			sscanf(buf, "%d %s", &seq_num, payload);
 			if (seq_num == highest_seq_num + 1) 
 			{
 				highest_seq_num = seq_num;
+				strcpy(payload, parsePacket(buf));
 				
-				if(fputs((char *) payload, fp) < 1){
+				if(fputs((char*)payload, fp) < 1){
 					printf("fputs() error\n");
 				}
 
-				//Send an acknowledgment
-				ack_string[0] = seq_num;
-				ack_string[1] = '\0';
-				alen = strlen(ack_string);
-				if (sendto(s, ack_string, alen+1, 0, (struct sockaddr *)&sin, sock_len) < 0) {
-					perror("Error in sending an acknowledgement");
-					exit(1);
-				}
 			}
+			sprintf(ack_string, "%d", seq_num);
+			alen = strlen(ack_string);
+			if (sendto(s, ack_string, alen+1, 0, (struct sockaddr *)&sin, sock_len) < 0) {
+				perror("Error in sending an acknowledgement");
+				exit(1);
+			}
+
 		}
 
         }

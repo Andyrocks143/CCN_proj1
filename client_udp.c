@@ -22,10 +22,10 @@ int main(int argc, char * argv[])
 	char frame[MAX_LINE + 4];
 	int s;
 	int slen;
-	char seq_num = 1;
+	int seq_num = 1;
 	char ack_str[5];
 	int ack_recv;
-	int flen, ack_len;
+	int flen, ack_len, ack_num;
 
 	struct timeval tv;
 	tv.tv_sec = 1;
@@ -77,12 +77,11 @@ int main(int argc, char * argv[])
 		slen = strlen(buf);
 		buf[slen] ='\0';
 
-		frame[0] = seq_num;
-		frame[1] = '\0';
-
-		strcat(frame, buf);
+		sprintf(frame, "%d\t%s", seq_num, buf);
 		flen = strlen(frame);
 		
+		printf("Sending %s\n", frame);
+
 		ack_recv = 0;
 		while(!ack_recv) {
 			printf("Sending packet with sequence number %d\n", (int) seq_num);
@@ -93,9 +92,11 @@ int main(int argc, char * argv[])
 			}
 			ack_len = recvfrom(s, ack_str, sizeof(ack_str), 0, (struct sockaddr*)&sin, &sock_len);
 			printf("Acknowlwdgement wait is dobne\n");
+			
 			if(ack_len > 0 ) {
+				sscanf(ack_str, "%d", &ack_num);
 				printf("Acknowledgement  + %d\n", ack_len);
-				if (ack_str[0] == seq_num) {
+				if (ack_num == seq_num) {
 					ack_recv = 1;
 				}
 				printf("Received acknowledgement %s\n", ack_str);
@@ -111,4 +112,5 @@ int main(int argc, char * argv[])
 	}
 	fclose(fp);
 }
+
 

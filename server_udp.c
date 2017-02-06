@@ -17,10 +17,10 @@ char parsePacket(char buf[], char payload[]) {
 	int framelen, i;
 	framelen = strlen(buf);
 
-	for (i = 2; i < framelen; i++) {
-		payload[i-2] = buf[i];
+	for (i = 1; i < framelen; i++) {
+		payload[i-1] = buf[i];
 	}
-	payload[framelen + 2] = '\0';
+	payload[framelen + 1] = '\0';
 
 
 	return seq_no;
@@ -34,7 +34,7 @@ int main(int argc, char * argv[])
 	char payload[MAX_LINE];
 	char ack_string[5];
         struct sockaddr_in sin;
-        int len;
+        int len, alen;
         int s, i;
         struct timeval tv;
 	char seq_num = 1, highest_seq_num = 0; 
@@ -76,6 +76,7 @@ int main(int argc, char * argv[])
 	
 	while(1){
 		len = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&sin, &sock_len);
+		printf("Received packet length %d\n", len);
 		if(len == -1){
         	    perror("PError");
 		}	
@@ -90,6 +91,7 @@ int main(int argc, char * argv[])
 		}	
 		else if(len > 1){
 			seq_num = parsePacket(buf, payload);
+			printf("Received sequence number %d\n", (int)seq_num);
 			if (seq_num == highest_seq_num + 1) 
 			{
 				highest_seq_num = seq_num;

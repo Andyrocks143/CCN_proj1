@@ -80,26 +80,20 @@ int main(int argc, char * argv[])
 		sprintf(frame, "%d\t%s", seq_num, buf);
 		flen = strlen(frame);
 		
-		printf("Sending %s\n", frame);
-
 		ack_recv = 0;
 		while(!ack_recv) {
-			printf("Sending packet with sequence number %d\n", (int) seq_num);
 
         		if(sendto(s, frame, flen+1, 0, (struct sockaddr *)&sin, sock_len)<0){
 				perror("SendTo Error\n");
 				exit(1);
 			}
 			ack_len = recvfrom(s, ack_str, sizeof(ack_str), 0, (struct sockaddr*)&sin, &sock_len);
-			printf("Acknowlwdgement wait is dobne\n");
 			
 			if(ack_len > 0 ) {
 				sscanf(ack_str, "%d", &ack_num);
-				printf("Acknowledgement  + %d\n", ack_len);
 				if (ack_num == seq_num) {
 					ack_recv = 1;
 				}
-				printf("Received acknowledgement %s\n", ack_str);
 			}
 		}
 		seq_num++;
